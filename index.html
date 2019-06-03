@@ -5,7 +5,7 @@
     <title>Title</title>
 </head>
 <body>
-<input type="text" id="numberInput" placeholder="请用逗号隔开，格式如:1,2,3,4..." style="width: 200px;">
+<input type="text" id="code" placeholder="请用逗号隔开，格式如:1,2,3,4..." style="width: 200px;">
 <button class="btn big">大</button>
 <button class="btn small">小</button>
 <button class="btn single">单</button>
@@ -14,6 +14,8 @@
 <button class="btn b-dou">大双</button>
 <button class="btn s-sin">小单</button>
 <button class="btn s-dou">小双</button>
+<!--pk10显示这个按钮-->
+<button class="btn random">随机号</button>
 <script src="https://cdn.bootcss.com/jquery/2.0.0/jquery.js"></script>
 <script>
     $(function () {
@@ -21,7 +23,7 @@
             return Math.floor(Math.random() * (to - from + 1) + from)
         }
         function addNum(n) {// 往输入框里加号码
-            $('#numberInput').val(n)
+            $('#code').val(n)
         }
         var Lottery = function (id,type,nMin,nMax,nRepeat,addZero) {
             // id:彩种id type:玩法类型 nMin:起始号码 nMax:结束号码 nRepeat:号码是否可重复 addZero: 小于十的号码是否加0
@@ -37,7 +39,7 @@
                 return arr;
             })(nMin, nMax);
         }
-        Lottery.prototype.big = function(){
+        Lottery.prototype.big = function(){//  生成大号
             var mid = Math.floor(this.number.length/2) - 1;// 获取中间位置的索引
             var last = this.number.length -1;// 获取最后位置的索引
             var repeat = true;
@@ -58,7 +60,7 @@
                 return r;
             }
         }
-        Lottery.prototype.small = function(){
+        Lottery.prototype.small = function(){//  生成小号
             var mid = Math.floor(this.number.length/2) - 1;
             var repeat = true;
             var r = 0;
@@ -78,7 +80,7 @@
                 return r;
             }
         }
-        Lottery.prototype.single = function(){
+        Lottery.prototype.single = function(){//  生成单号
             var single = false;
             while (!single){
                 var repeat = true;
@@ -103,7 +105,7 @@
                 }
             }
         }
-        Lottery.prototype.double = function(){
+        Lottery.prototype.double = function(){//  生成双号
             var double = false;
             while (!double){
                 var repeat = true;
@@ -128,11 +130,11 @@
                 }
             }
         }
-        Lottery.prototype.bigDouble = function(){
+        Lottery.prototype.bigDouble = function(){//  生成大双号
             var double = false;
             var mid = Math.floor(this.number.length/2) - 1;
             var last = this.number.length -1;
-            if(!this.stopAddNumber()){// 是否还有号码组合
+            if(!this.stopAddNumber('bD')){// 是否还有号码组合
                 return false;
             }
             while (!double){
@@ -158,11 +160,11 @@
                 }
             }
         }
-        Lottery.prototype.bigSingle = function(){
+        Lottery.prototype.bigSingle = function(){//  生成大单号
             var single = false;
             var mid = Math.floor(this.number.length/2) - 1;
             var last = this.number.length -1;
-            if(!this.stopAddNumber()){// 是否还有号码组合
+            if(!this.stopAddNumber('bS')){// 是否还有号码组合
                 return false;
             }
             while (!single){
@@ -188,10 +190,10 @@
                 }
             }
         }
-        Lottery.prototype.smallSingle = function(){
+        Lottery.prototype.smallSingle = function(){//  生成小单号
             var single = false;
             var mid = Math.floor(this.number.length/2) - 1;
-            if(!this.stopAddNumber()){// 是否还有号码组合
+            if(!this.stopAddNumber('sS')){// 是否还有号码组合
                 return false;
             }
             while (!single){
@@ -217,10 +219,10 @@
                 }
             }
         }
-        Lottery.prototype.smallDouble = function(){
+        Lottery.prototype.smallDouble = function(){//  生成小双号
             var double = false;
             var mid = Math.floor(this.number.length/2) - 1;
-            if(!this.stopAddNumber()){// 是否还有号码组合
+            if(!this.stopAddNumber('sD')){// 是否还有号码组合
                 return false;
             }
             while (!double){
@@ -246,15 +248,40 @@
                 }
             }
         }
+        Lottery.prototype.random = function(){// 生成一组随机号
+            if(!this.stopAddNumber()){// 是否还有号码组合
+                return false;
+            }
+            var repeat = true;
+            var r = 0;
+            if(!this.nRepeat){// 号码不重复
+                while(repeat){
+                    r = randomNum(this.number[0], this.number[this.number.length - 1]);
+                    if(this.diffNumber(r)){
+                        repeat = false;
+                    }
+                }
+            }else{//  号码可以重复
+                r = randomNum(this.number[0], this.number[this.number.length - 1]);
+            }
+            if(this.addZero&& r < 10){
+                return '0' + r;
+            }else{
+                return r;
+            }
+        }
         Lottery.prototype.diffNumber = function (n) {//  号码不重复，返回true，否则返回false
-            var numbers = $('#numberInput').val().split(',');
+            var numbers = $('#code').val().split(',');
             return numbers.every(function (num) {
                 return n != num;
             });
         }
-        Lottery.prototype.stopAddNumber = function () {// 判断是否还有号码组合，如果没有号码组合了，停止加号码，防止出现while的死循环
-            if(!this.nRepeat && curOpenNum.numbers.length === curOpenNum.numCount){
-                console.log('已经没有号码组合');
+        Lottery.prototype.stopAddNumber = function (t) {// 判断是否还有号码组合，如果没有号码组合了，停止加号码，防止出现while的死循环
+            if(
+                (!this.nRepeat && curOpenNum.numbers.length === curOpenNum.numCount) ||
+                (((t === 'bD' || t === 'sS')) && curOpenNum.numbers.length === 2)
+            ){
+                alert('已经没有号码组合');
                 return false;
             }else{
                 return true;
@@ -265,18 +292,60 @@
             this.numbers = [];//  存放开奖号码的数组
         }
         OpenNumber.prototype.add = function (n) {//  往开奖数组里面加号码
-            if(this.numbers.length === this.numCount){
-                this.numbers.pop();
-                this.numbers.push(n);
+            if(curLot.type === 'pcdd'){
+                if(this.numbers.length === this.numCount){
+                    return false;
+                }else{
+                    this.numbers.push(n);
+                    if(this.numbers.length === this.numCount - 1){
+                        this.numbers.push(this.numbers.reduce(function (total, num) {
+                            return total + num;
+                        }));
+                    }
+                }
             }else{
-                this.numbers.push(n);
+                if(this.numbers.length === this.numCount){
+                    this.numbers.pop();
+                    this.numbers.push(n);
+                }else{
+                    this.numbers.push(n);
+                }
             }
         }
         // 实例化彩种和彩种对应的开奖号码
-        // var curLot = new Lottery(12,'k3',1,6,true);
-        // var curOpenNum = new OpenNumber(3);
-        var curLot = new Lottery(12,'ssc',1,20,false,falses);
-        var curOpenNum = new OpenNumber(5);
+        var game_id = 10;// 接收gameid
+        if(game_id == 8 || game_id == 29 || game_id == 30 || game_id == 37 || game_id == 38 || game_id == 57 || // pk10显示随机选号的按钮
+            game_id == 10 || game_id == 41 || game_id == 21 || game_id == 22 || game_id == 23 || game_id == 24 || game_id == 28 // 11选5显示随机选号的按钮
+        ){
+            $('button.btn').not('.random').hide();
+        }else{//  不是PK10显示其它快捷号码
+            $('.btn.random').hide();
+        }
+        if(game_id == 1 || game_id == 43 || game_id == 2 || game_id == 11 || game_id == 9 || game_id == 52 || game_id == 53 || game_id == 54 || game_id == 14 || game_id == 20 || game_id == 39){// 时时彩
+            var curLot = new Lottery(game_id,'ssc',0,9,true,false);
+            var curOpenNum = new OpenNumber(5);
+        }else if(game_id == 4 || game_id == 15 || game_id == 44 || game_id == 16 || game_id == 17 || game_id == 18 || game_id == 19 || game_id == 45 || game_id == 46 || game_id == 12 || game_id == 40 || game_id == 27){// 快三
+            var curLot = new Lottery(game_id,'k3',1,6,true,false);
+            var curOpenNum = new OpenNumber(3);
+        }else if(game_id == 8 || game_id == 29 || game_id == 30 || game_id == 37 || game_id == 38 || game_id == 57){// PK10
+            var curLot = new Lottery(game_id,'pk10',1,10,false,true);
+            var curOpenNum = new OpenNumber(10);
+        }else if(game_id == 35 || game_id == 36 || game_id == 42){// 六合彩
+            var curLot = new Lottery(game_id,'lhc',1,49,false,false);
+            var curOpenNum = new OpenNumber(7);
+        }else if(game_id == 5 || game_id == 6 || game_id == 55 || game_id == 56){// 低频彩
+            var curLot = new Lottery(game_id,'dpc',0,9,true,false);
+            var curOpenNum = new OpenNumber(3);
+        }else if(game_id == 32){// 快乐10分
+            var curLot = new Lottery(game_id,'klsf',1,20,false,true);
+            var curOpenNum = new OpenNumber(8);
+        }else if(game_id == 33 || game_id == 47 || game_id == 48 || game_id == 49 || game_id == 50 || game_id == 51){// PC蛋蛋
+            var curLot = new Lottery(game_id,'pcdd',0,9,false,false);
+            var curOpenNum = new OpenNumber(4);
+        }else if(game_id == 10 || game_id == 41 || game_id == 21 || game_id == 22 || game_id == 23 || game_id == 24 || game_id == 28){// 11选5
+            var curLot = new Lottery(game_id,'11x5',1,11,false,true);
+            var curOpenNum = new OpenNumber(5);
+        }
         $('.btn.big').on('click', function () {
             var n = curLot.big();
             curOpenNum.add(n);
@@ -333,12 +402,21 @@
                 addNum(curOpenNum.numbers.join(','))
             }
         });
-        $('#numberInput').on('blur', function () {//  输入款为空时，重置存储的numbers为[]
+        $('.btn.random').on('click', function () {
+            var n = curLot.random();
+            if(n === false){
+                return false;
+            }else{
+                curOpenNum.add(n);
+                addNum(curOpenNum.numbers.join(','))
+            }
+        });
+        $('#code').on('blur', function () {//  输入款为空时，重置存储的numbers为[]
             if($(this).val() === ''){
                 curOpenNum.numbers = []
             }
         });
-        $('#numberInput').on('change', function () {//  删除号码时重置存储的numbers
+        $('#code').on('change', function () {//  删除号码时重置存储的numbers
             curOpenNum.numbers = $(this).val().split(',')
         });
     });
